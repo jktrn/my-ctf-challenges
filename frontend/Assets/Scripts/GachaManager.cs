@@ -6,6 +6,7 @@ using RequestClasses;
 public class GachaManager : MonoBehaviour
 {
     public UIManager uiManager;
+    public GachaResponse lastGachaResponse;
 
     private GameState gameState;
 
@@ -25,7 +26,7 @@ public class GachaManager : MonoBehaviour
         StartCoroutine(SendGachaRequest(numPulls));
     }
 
-    IEnumerator SendGachaRequest(int numPulls)
+    public IEnumerator SendGachaRequest(int numPulls)
     {
         GachaRequest gachaRequest = new GachaRequest(gameState.crystals, gameState.pulls, numPulls);
         string json = JsonUtility.ToJson(gachaRequest);
@@ -63,6 +64,7 @@ public class GachaManager : MonoBehaviour
     void HandleGachaResponse(string responseText, int numPulls)
     {
         GachaResponse response = JsonUtility.FromJson<GachaResponse>(responseText);
+        lastGachaResponse = response;
 
         if (response.flag != null)
         {
