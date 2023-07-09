@@ -258,6 +258,87 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 30107472}
   m_CullTransparentMesh: 1
+--- !u!1 &96839006
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 96839010}
+  - component: {fileID: 96839009}
+  - component: {fileID: 96839008}
+  - component: {fileID: 96839007}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &96839007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96839006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7cabd04b05cd164283ee8f98e8c93cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  crystals: 1000
+  pulls: 0
+--- !u!114 &96839008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96839006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 180113788e5a9aa46b1ef0f2cdbb0380, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  crystalText: {fileID: 228667721}
+  onePullButton: {fileID: 1344851741}
+  tenPullButton: {fileID: 1843779803}
+  splashArtCanvas: {fileID: 243226098}
+  splashArtImage: {fileID: 1248225901}
+  rarityText: {fileID: 2067946167}
+  cardNameText: {fileID: 958956488}
+  nameText: {fileID: 1736731444}
+--- !u!114 &96839009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96839006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8e20bdf26113f847afb009a1aab0db8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiManager: {fileID: 96839008}
+--- !u!4 &96839010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96839006}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.81729114, y: -0.64198273, z: 2.1793525}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &152663584
 GameObject:
   m_ObjectHideFlags: 0
@@ -645,7 +726,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   m_Layer: 0
-  m_Name: Main Camera
+  m_Name: MainCamera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1637,7 +1718,6 @@ GameObject:
   - component: {fileID: 2050791801}
   - component: {fileID: 2050791800}
   - component: {fileID: 2050791799}
-  - component: {fileID: 2050791798}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1645,29 +1725,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2050791798
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2050791797}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 52676152ebe8908419857db76675eff3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  crystalText: {fileID: 228667721}
-  onePullButton: {fileID: 1344851741}
-  tenPullButton: {fileID: 1843779803}
-  splashArtCanvas: {fileID: 243226098}
-  splashArtImage: {fileID: 1248225901}
-  rarityText: {fileID: 2067946167}
-  cardNameText: {fileID: 958956488}
-  nameText: {fileID: 1736731444}
-  skipButton: {fileID: 1002527374}
-  overviewGrid: {fileID: 1791399556}
-  crystals: 1000
 --- !u!114 &2050791799
 MonoBehaviour:
   m_ObjectHideFlags: 0
