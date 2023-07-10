@@ -44,7 +44,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdateUI()
     {
-        crystalText.text = $"Crystals: {gameState.crystals}";
+        crystalText.text = gameState.crystals.ToString();
     }
 
     public void OnPullButtonClick(int cost, int numPulls)
