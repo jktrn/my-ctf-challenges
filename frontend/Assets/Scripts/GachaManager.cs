@@ -74,5 +74,6 @@ public class GachaManager : MonoBehaviour
         gameState.SpendCrystals(numPulls);
         uiManager.UpdateUI();
         uiManager.splashArtCanvas.gameObject.SetActive(true);
+        AudioController.Instance.FadeMusic("Pulling");
     }
 }

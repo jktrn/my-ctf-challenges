@@ -1,0 +1,61 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+
+public class ShrinkButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+{
+    public Button yourButton;
+    public float shrinkFactor = 0.9f;
+    public float shrinkTime = 0.1f;
+
+    private Vector3 originalScale;
+
+    void Start()
+    {
+        originalScale = transform.localScale;
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        StopAllCoroutines();
+        AudioController.Instance.PlaySFX("Touch");
+        StartCoroutine(Shrink());
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        StopAllCoroutines();
+        StartCoroutine(Grow());
+    }
+
+    IEnumerator Shrink()
+    {
+        Vector3 targetScale = originalScale * shrinkFactor;
+        float currentTime = 0.0f;
+
+        do
+        {
+            transform.localScale = Vector3.Lerp(originalScale, targetScale, currentTime / shrinkTime);
+            currentTime += Time.deltaTime;
+            yield return null;
+        } while (currentTime <= shrinkTime);
+
+        transform.localScale = targetScale;
+    }
+
+    IEnumerator Grow()
+    {
+        Vector3 targetScale = originalScale;
+        float currentTime = 0.0f;
+
+        do
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, currentTime / shrinkTime);
+            currentTime += Time.deltaTime;
+            yield return null;
+        } while (currentTime <= shrinkTime);
+
+        transform.localScale = targetScale;
+    }
+}

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using RequestClasses;
+using UnityEngine.EventSystems;
 
 public class UIManager : MonoBehaviour
 {
@@ -17,7 +18,11 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI rarityText;
     public TextMeshProUGUI cardNameText;
     public TextMeshProUGUI nameText;
+    public Image splashArtBackground;
     public Image splashArtImage;
+    public Image splashArtImageMask;
+    public Image silhouetteImage;
+    public RawImage movingTriangles;
     public Button skipButton;
 
     [Header("Gacha Overview")]
@@ -25,21 +30,28 @@ public class UIManager : MonoBehaviour
     public GridLayoutGroup gridLayoutGroup;
     public GameObject avatarPrefab;
     public Button nextButton;
+    public Button returnButton;
+    public Button pullAgainButton;
 
     private GameState gameState;
     private GachaManager gachaManager;
+    private Animator animator;
     private List<GameObject> avatarObjects = new List<GameObject>();
+    private bool skipClicked = false;
 
     void Start()
     {
         gameState = FindObjectOfType<GameState>();
         gachaManager = FindObjectOfType<GachaManager>();
+        animator = GetComponent<Animator>();
         UpdateUI();
 
         onePullButton.onClick.AddListener(() => OnPullButtonClick(100, 1));
         tenPullButton.onClick.AddListener(() => OnPullButtonClick(1000, 10));
         skipButton.onClick.AddListener(OnSkipButtonClick);
         nextButton.onClick.AddListener(OnNextButtonClick);
+        returnButton.onClick.AddListener(OnNextButtonClick);
+        pullAgainButton.onClick.AddListener(OnPullAgainButtonClick);
     }
 
     public void UpdateUI()
@@ -62,25 +74,135 @@ public class UIManager : MonoBehaviour
     {
         for (int i = 0; i < characters.Length; i++)
         {
-            DisplayCharacter(characters[i]);
+            if (skipClicked)
+            {
+                skipClicked = false;
+                break;
+            }
+
+            StartCoroutine(DisplayCharacter(characters[i]));
             yield return new WaitForEndOfFrame();
-            yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
+            yield return new WaitUntil(() =>
+            {
+                if (skipClicked)
+                {
+                    return true;
+                }
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (EventSystem.current.currentSelectedGameObject != skipButton.gameObject)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (!skipClicked)
+            {
+                AudioController.Instance.PlaySFX("Touch");
+            }
         }
 
-        splashArtCanvas.gameObject.SetActive(false);
-        DisplayAvatars(characters);
-        gachaOverviewCanvas.gameObject.SetActive(true);
+        DisplayGachaOverview();
     }
 
-    void DisplayCharacter(Character character)
+    IEnumerator DisplayCharacter(Character character)
+    {
+        UpdateCharacterText(character);
+
+        var silhouetteImageAnimation = silhouetteImage.GetComponent<Animation>();
+        var splashArtBackgroundAnimation = splashArtBackground.GetComponent<Animation>();
+        var splashArtImageMaskAnimation = splashArtImageMask.GetComponent<Animation>();
+        var movingTrianglesAnimation = movingTriangles.GetComponent<Animation>();
+
+        ResetAnimations();
+        UpdateSplashArtImage(character.splashArt);
+        UpdateSilhouetteImage(character.splashArt);
+
+        silhouetteImageAnimation.Play();
+        yield return new WaitForSeconds(silhouetteImageAnimation.clip.length);
+        StartCoroutine(FadeMaterial(splashArtBackground.material, 0.5f));
+        movingTrianglesAnimation.Play();
+        splashArtBackgroundAnimation.Play();
+        splashArtImageMaskAnimation.Play();
+    }
+
+    IEnumerator FadeMaterial(Material material, float duration)
+    {
+        float startValue = material.GetFloat("_GrayscaleAmount");
+
+        float targetValue = 0f;
+
+        for (float t = 0; t < duration; t += Time.deltaTime)
+        {
+            float value = Mathf.Lerp(startValue, targetValue, t / duration);
+            material.SetFloat("_GrayscaleAmount", value);
+            yield return null;
+        }
+
+        material.SetFloat("_GrayscaleAmount", targetValue);
+    }
+
+    void UpdateCharacterText(Character character)
     {
         rarityText.text = character.rarity;
         cardNameText.text = character.cardName;
         nameText.text = character.name;
+    }
 
-        string imagePath = "Gacha/" + character.splashArt;
+    void ResetAnimations()
+    {
+        RectTransform splashArtImageMaskRectTransform = splashArtImageMask.GetComponent<RectTransform>();
+        splashArtImageMaskRectTransform.sizeDelta = new Vector2(splashArtImageMaskRectTransform.sizeDelta.x, 0);
+        splashArtBackground.material.SetFloat("_GrayscaleAmount", 1f);
+
+        var movingTrianglesImage = movingTriangles.GetComponent<RawImage>();
+        Color movingTrianglesColor = movingTrianglesImage.color;
+        movingTrianglesColor.a = 0;
+        movingTrianglesImage.color = movingTrianglesColor;
+    }
+
+    void UpdateSplashArtImage(string splashArt)
+    {
+        string imagePath = "Gacha/" + splashArt;
         Texture2D texture = Resources.Load<Texture2D>(imagePath);
-        splashArtImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+        splashArtImage.sprite = Sprite.Create(
+            texture,
+            new Rect(0, 0, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f)
+        );
+    }
+
+    void UpdateSilhouetteImage(string splashArt)
+    {
+        string imagePath = "Gacha/" + splashArt;
+        Texture2D texture = Resources.Load<Texture2D>(imagePath);
+
+        Texture2D silhouetteTexture = new Texture2D(texture.width, texture.height);
+        Color[] pixels = texture.GetPixels();
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            if (pixels[i].a > 0)
+            {
+                pixels[i] = new Color(1, 103 / 255f, 154 / 255f, pixels[i].a);
+            }
+        }
+        silhouetteTexture.SetPixels(pixels);
+        silhouetteTexture.Apply();
+        silhouetteImage.sprite = Sprite.Create(
+            silhouetteTexture,
+            new Rect(0, 0, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f)
+        );
+    }
+
+    void DisplayGachaOverview()
+    {
+        splashArtCanvas.gameObject.SetActive(false);
+        AudioController.Instance.FadeMusic("Gacha");
+        DisplayAvatars(gachaManager.lastGachaResponse.characters);
+        gachaOverviewCanvas.gameObject.SetActive(true);
     }
 
     void DisplayAvatars(Character[] characters)
@@ -89,6 +211,7 @@ public class UIManager : MonoBehaviour
         {
             Destroy(avatarObject);
         }
+
         avatarObjects.Clear();
 
         foreach (Character character in characters)
@@ -105,14 +228,19 @@ public class UIManager : MonoBehaviour
 
     void OnSkipButtonClick()
     {
+        skipClicked = true;
         StopAllCoroutines();
-        splashArtCanvas.gameObject.SetActive(false);
-        DisplayAvatars(gachaManager.lastGachaResponse.characters);
-        gachaOverviewCanvas.gameObject.SetActive(true);
+        DisplayGachaOverview();
     }
 
     void OnNextButtonClick()
     {
+        gachaOverviewCanvas.gameObject.SetActive(false);
+    }
+
+    void OnPullAgainButtonClick()
+    {
+        StartCoroutine(gachaManager.SendGachaRequest(10));
         gachaOverviewCanvas.gameObject.SetActive(false);
     }
 }
