@@ -6,8 +6,10 @@ using System;
 public class AudioController : MonoBehaviour
 {
     public static AudioController Instance;
-    public Sound[] musicSounds, sfxSounds;
-    public AudioSource musicSource, sfxSource;
+    public Sound[] musicSounds,
+        sfxSounds;
+    public AudioSource musicSource,
+        sfxSource;
     public float fadeTime = 1.0f;
 
     private bool isFading = false;

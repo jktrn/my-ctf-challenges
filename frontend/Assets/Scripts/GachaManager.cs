@@ -38,7 +38,9 @@ public class GachaManager : MonoBehaviour
             if (request.result == UnityWebRequest.Result.Success)
             {
                 HandleGachaResponse(request.downloadHandler.text, numPulls);
-                GachaResponse response = JsonUtility.FromJson<GachaResponse>(request.downloadHandler.text);
+                GachaResponse response = JsonUtility.FromJson<GachaResponse>(
+                    request.downloadHandler.text
+                );
                 StartCoroutine(uiManager.DisplaySplashArt(response.characters));
             }
             else

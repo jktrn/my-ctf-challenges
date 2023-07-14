@@ -36,7 +36,11 @@ public class ShrinkButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
         do
         {
-            transform.localScale = Vector3.Lerp(originalScale, targetScale, currentTime / shrinkTime);
+            transform.localScale = Vector3.Lerp(
+                originalScale,
+                targetScale,
+                currentTime / shrinkTime
+            );
             currentTime += Time.deltaTime;
             yield return null;
         } while (currentTime <= shrinkTime);
@@ -51,7 +55,11 @@ public class ShrinkButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
         do
         {
-            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, currentTime / shrinkTime);
+            transform.localScale = Vector3.Lerp(
+                transform.localScale,
+                targetScale,
+                currentTime / shrinkTime
+            );
             currentTime += Time.deltaTime;
             yield return null;
         } while (currentTime <= shrinkTime);
