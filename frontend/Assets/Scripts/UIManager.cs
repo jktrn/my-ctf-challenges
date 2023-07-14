@@ -19,6 +19,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI cardNameText;
     public TextMeshProUGUI nameText;
     public Image splashArtBackground;
+    public Image backgroundTint;
     public Image splashArtImage;
     public Image splashArtImageMask;
     public Image silhouetteImage;
@@ -38,6 +39,7 @@ public class UIManager : MonoBehaviour
     private Animator animator;
     private List<GameObject> avatarObjects = new List<GameObject>();
     private bool skipClicked = false;
+    private bool isAnimating = false;
 
     void Start()
     {
@@ -90,6 +92,13 @@ public class UIManager : MonoBehaviour
                 }
                 if (Input.GetMouseButtonDown(0))
                 {
+                    if (isAnimating)
+                    {
+                        StopAllCoroutines();
+                        StartCoroutine(DisplayCharacterInstantly(characters[i]));
+                        return false;
+                    }
+
                     if (EventSystem.current.currentSelectedGameObject != skipButton.gameObject)
                     {
                         return true;
@@ -110,38 +119,62 @@ public class UIManager : MonoBehaviour
     IEnumerator DisplayCharacter(Character character)
     {
         UpdateCharacterText(character);
+        UpdateSplashArtImage(character.splashArt);
+        UpdateSilhouetteImage(character.splashArt);
+        ResetAnimations();
 
         var silhouetteImageAnimation = silhouetteImage.GetComponent<Animation>();
         var splashArtBackgroundAnimation = splashArtBackground.GetComponent<Animation>();
+        var backgroundTintAnimation = backgroundTint.GetComponent<Animation>();
         var splashArtImageMaskAnimation = splashArtImageMask.GetComponent<Animation>();
         var movingTrianglesAnimation = movingTriangles.GetComponent<Animation>();
 
-        ResetAnimations();
+        isAnimating = true;
+        silhouetteImageAnimation.Play();
+        splashArtBackgroundAnimation.Play();
+
+        yield return new WaitForSeconds(silhouetteImageAnimation.clip.length);
+
+        movingTrianglesAnimation.Play();
+        splashArtImageMaskAnimation.Play();
+
+        yield return new WaitForSeconds(1.5f);
+
+        backgroundTintAnimation.Play();
+
+        yield return new WaitUntil(
+            () =>
+                !splashArtBackgroundAnimation.isPlaying
+                && !splashArtImageMaskAnimation.isPlaying
+                && !movingTrianglesAnimation.isPlaying
+        );
+
+        isAnimating = false;
+    }
+
+    IEnumerator DisplayCharacterInstantly(Character character)
+    {
+        UpdateCharacterText(character);
         UpdateSplashArtImage(character.splashArt);
         UpdateSilhouetteImage(character.splashArt);
 
-        silhouetteImageAnimation.Play();
-        yield return new WaitForSeconds(silhouetteImageAnimation.clip.length);
-        StartCoroutine(FadeMaterial(splashArtBackground.material, 0.5f));
-        movingTrianglesAnimation.Play();
-        splashArtBackgroundAnimation.Play();
-        splashArtImageMaskAnimation.Play();
-    }
+        var splashArtBackgroundAnimation = splashArtBackground.GetComponent<Animation>();
+        RectTransform splashArtImageMaskRectTransform =
+            splashArtImageMask.GetComponent<RectTransform>();
 
-    IEnumerator FadeMaterial(Material material, float duration)
-    {
-        float startValue = material.GetFloat("_GrayscaleAmount");
+        SetImageOpacity(silhouetteImage.GetComponent<Image>(), 1f);
+        SetImageOpacity(backgroundTint.GetComponent<Image>(), 0.6f);
+        SetImageOpacity(movingTriangles.GetComponent<RawImage>(), 0.6f);
 
-        float targetValue = 0f;
+        splashArtImageMaskRectTransform.sizeDelta = new Vector2(
+            splashArtImageMaskRectTransform.sizeDelta.x,
+            1207.6f
+        );
 
-        for (float t = 0; t < duration; t += Time.deltaTime)
-        {
-            float value = Mathf.Lerp(startValue, targetValue, t / duration);
-            material.SetFloat("_GrayscaleAmount", value);
-            yield return null;
-        }
+        splashArtBackgroundAnimation["SplashArtBackground"].normalizedTime = 1f;
 
-        material.SetFloat("_GrayscaleAmount", targetValue);
+        isAnimating = false;
+        yield break;
     }
 
     void UpdateCharacterText(Character character)
@@ -149,18 +182,6 @@ public class UIManager : MonoBehaviour
         rarityText.text = character.rarity;
         cardNameText.text = character.cardName;
         nameText.text = character.name;
-    }
-
-    void ResetAnimations()
-    {
-        RectTransform splashArtImageMaskRectTransform = splashArtImageMask.GetComponent<RectTransform>();
-        splashArtImageMaskRectTransform.sizeDelta = new Vector2(splashArtImageMaskRectTransform.sizeDelta.x, 0);
-        splashArtBackground.material.SetFloat("_GrayscaleAmount", 1f);
-
-        var movingTrianglesImage = movingTriangles.GetComponent<RawImage>();
-        Color movingTrianglesColor = movingTrianglesImage.color;
-        movingTrianglesColor.a = 0;
-        movingTrianglesImage.color = movingTrianglesColor;
     }
 
     void UpdateSplashArtImage(string splashArt)
@@ -197,14 +218,6 @@ public class UIManager : MonoBehaviour
         );
     }
 
-    void DisplayGachaOverview()
-    {
-        splashArtCanvas.gameObject.SetActive(false);
-        AudioController.Instance.FadeMusic("Gacha");
-        DisplayAvatars(gachaManager.lastGachaResponse.characters);
-        gachaOverviewCanvas.gameObject.SetActive(true);
-    }
-
     void DisplayAvatars(Character[] characters)
     {
         foreach (GameObject avatarObject in avatarObjects)
@@ -222,8 +235,27 @@ public class UIManager : MonoBehaviour
             Image avatarImage = avatarObject.GetComponent<Image>();
             string imagePath = "Gacha/" + character.avatar;
             Texture2D texture = Resources.Load<Texture2D>(imagePath);
-            avatarImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            avatarImage.sprite = Sprite.Create(
+                texture,
+                new Rect(0, 0, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f)
+            );
         }
+    }
+
+    void SetImageOpacity(MaskableGraphic image, float targetOpacity)
+    {
+        Color imageColor = image.color;
+        imageColor.a = targetOpacity;
+        image.color = imageColor;
+    }
+
+    void DisplayGachaOverview()
+    {
+        splashArtCanvas.gameObject.SetActive(false);
+        AudioController.Instance.FadeMusic("Gacha");
+        DisplayAvatars(gachaManager.lastGachaResponse.characters);
+        gachaOverviewCanvas.gameObject.SetActive(true);
     }
 
     void OnSkipButtonClick()
@@ -242,5 +274,19 @@ public class UIManager : MonoBehaviour
     {
         StartCoroutine(gachaManager.SendGachaRequest(10));
         gachaOverviewCanvas.gameObject.SetActive(false);
+    }
+
+    void ResetAnimations()
+    {
+        RectTransform splashArtImageMaskRectTransform =
+            splashArtImageMask.GetComponent<RectTransform>();
+        splashArtImageMaskRectTransform.sizeDelta = new Vector2(
+            splashArtImageMaskRectTransform.sizeDelta.x,
+            0.0f
+        );
+
+        SetImageOpacity(silhouetteImage.GetComponent<Image>(), 0f);
+        SetImageOpacity(backgroundTint.GetComponent<Image>(), 0f);
+        SetImageOpacity(movingTriangles.GetComponent<RawImage>(), 0f);
     }
 }
