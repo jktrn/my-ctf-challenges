@@ -29,7 +29,7 @@ Material:
     m_Ints: []
     m_Floats:
     - Effect: 3
-    - _FxBlend: 0
+    - _FxBlend: 1
     - _KMul: 1
     m_Colors:
     - _0123: {r: -1, g: -1, b: -1, a: -1}

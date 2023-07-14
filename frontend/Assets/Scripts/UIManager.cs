@@ -22,7 +22,10 @@ public class UIManager : MonoBehaviour
     public Image backgroundTint;
     public Image splashArtImage;
     public Image splashArtImageMask;
+    public Image threeStarSplash;
     public Image silhouetteImage;
+    public Image namecardMask;
+    public GameObject stars;
     public RawImage movingTriangles;
     public Button skipButton;
 
@@ -99,11 +102,11 @@ public class UIManager : MonoBehaviour
         DisplayGachaOverview();
     }
 
-    IEnumerator DisplayTwoStarCharacter(Character character)
+    private IEnumerator DisplayTwoStarCharacter(Character character)
     {
         ResetAnimations();
         UpdateCharacterText(character);
-        UpdateSplashArtImage(character.splashArt);
+        UpdateSplashArtImage(character.splashArt, splashArtImage);
         UpdateSilhouetteImage(character.splashArt);
 
         Animation silhouetteImageAnimation = silhouetteImage.GetComponent<Animation>();
@@ -111,6 +114,8 @@ public class UIManager : MonoBehaviour
         Animation backgroundTintAnimation = backgroundTint.GetComponent<Animation>();
         Animation splashArtImageMaskAnimation = splashArtImageMask.GetComponent<Animation>();
         Animation movingTrianglesAnimation = movingTriangles.GetComponent<Animation>();
+        Animation starsAnimation = stars.GetComponent<Animation>();
+        Animation namecardMaskAnimation = namecardMask.GetComponent<Animation>();
 
         isAnimating = true;
         silhouetteImageAnimation.Play();
@@ -120,8 +125,13 @@ public class UIManager : MonoBehaviour
 
         movingTrianglesAnimation.Play();
         splashArtImageMaskAnimation.Play();
+        starsAnimation.Play("TwoStarRarity");
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(0.5f);
+
+        namecardMaskAnimation.Play();
+
+        yield return new WaitForSeconds(1f);
 
         backgroundTintAnimation.Play();
 
@@ -135,11 +145,11 @@ public class UIManager : MonoBehaviour
         isAnimating = false;
     }
 
-    IEnumerator DisplayTwoStarCharacterInstant(Character character)
+    private IEnumerator DisplayTwoStarCharacterInstant(Character character)
     {
         ResetAnimations();
         UpdateCharacterText(character);
-        UpdateSplashArtImage(character.splashArt);
+        UpdateSplashArtImage(character.splashArt, splashArtImage);
         UpdateSilhouetteImage(character.splashArt);
 
         SkipAnimation(silhouetteImage.gameObject, "SilhouetteImage", 3f);
@@ -147,42 +157,73 @@ public class UIManager : MonoBehaviour
         SkipAnimation(backgroundTint.gameObject, "BackgroundTint");
         SkipAnimation(splashArtImageMask.gameObject, "SplashImage");
         SkipAnimation(movingTriangles.gameObject, "MovingTriangles");
+        SkipAnimation(stars, "TwoStarRarity");
+        SkipAnimation(namecardMask.gameObject, "Namecard");
 
         isAnimating = false;
         yield break;
     }
 
-    IEnumerator DisplayThreeStarCharacter(Character character)
+    private IEnumerator DisplayThreeStarCharacter(Character character)
     {
-        // TODO: Implement 3* animation
+        ResetAnimations();
+        UpdateCharacterText(character);
+        UpdateSplashArtImage(character.splashArt, threeStarSplash);
+        threeStarSplash.gameObject.SetActive(true);
+
+        Animation threeStarSplashAnimation = threeStarSplash.GetComponent<Animation>();
+        Animation starsAnimation = stars.GetComponent<Animation>();
+        Animation namecardMaskAnimation = namecardMask.GetComponent<Animation>();
+
+        isAnimating = true;
+        threeStarSplashAnimation.Play();
+
+        yield return new WaitForSeconds(1f);
+
+        starsAnimation.Play("ThreeStarRarity");
+
+        yield return new WaitForSeconds(1f);
+
+        namecardMaskAnimation.Play();
+
+        yield return new WaitUntil(() => !threeStarSplashAnimation.isPlaying);
+
+        isAnimating = false;
         yield break;
     }
 
-    IEnumerator DisplayThreeStarCharacterInstant(Character character)
+    private IEnumerator DisplayThreeStarCharacterInstant(Character character)
     {
-        // TODO: Implement 3* animation
+        ResetAnimations();
+        UpdateCharacterText(character);
+        UpdateSplashArtImage(character.splashArt, threeStarSplash);
+        threeStarSplash.gameObject.SetActive(true);
+
+        SkipAnimation(threeStarSplash.gameObject, "ThreeStarSplash");
+        SkipAnimation(stars, "ThreeStarRarity");
+        SkipAnimation(namecardMask.gameObject, "Namecard");
+        
+        isAnimating = false;
         yield break;
     }
 
-    void UpdateCharacterText(Character character)
+    private void UpdateCharacterText(Character character)
     {
-        rarityText.text = character.rarity;
         cardNameText.text = character.cardName;
-        nameText.text = character.name;
     }
 
-    void UpdateSplashArtImage(string splashArt)
+    private void UpdateSplashArtImage(string splashArt, Image image)
     {
         string imagePath = "Gacha/" + splashArt;
         Texture2D texture = Resources.Load<Texture2D>(imagePath);
-        splashArtImage.sprite = Sprite.Create(
+        image.sprite = Sprite.Create(
             texture,
             new Rect(0, 0, texture.width, texture.height),
             new Vector2(0.5f, 0.5f)
         );
     }
 
-    void UpdateSilhouetteImage(string splashArt)
+    private void UpdateSilhouetteImage(string splashArt)
     {
         string imagePath = "Gacha/" + splashArt;
         Texture2D texture = Resources.Load<Texture2D>(imagePath);
@@ -205,7 +246,7 @@ public class UIManager : MonoBehaviour
         );
     }
 
-    void DisplayAvatars(Character[] characters)
+    private void DisplayAvatars(Character[] characters)
     {
         foreach (GameObject avatarObject in avatarObjects)
         {
@@ -230,7 +271,11 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    void SkipAnimation(GameObject gameObject, string clipName, float startTime = float.MaxValue)
+    private void SkipAnimation(
+        GameObject gameObject,
+        string clipName,
+        float startTime = float.MaxValue
+    )
     {
         Animation animation = gameObject.GetComponent<Animation>();
         animation.Play(clipName);
@@ -238,14 +283,14 @@ public class UIManager : MonoBehaviour
             startTime == float.MaxValue ? animation[clipName].clip.length : startTime;
     }
 
-    void SetImageOpacity(MaskableGraphic image, float targetOpacity)
+    private void SetImageOpacity(MaskableGraphic image, float targetOpacity)
     {
         Color imageColor = image.color;
         imageColor.a = targetOpacity;
         image.color = imageColor;
     }
 
-    void DisplayGachaOverview()
+    private void DisplayGachaOverview()
     {
         splashArtCanvas.gameObject.SetActive(false);
         AudioController.Instance.FadeMusic("Gacha");
@@ -253,25 +298,32 @@ public class UIManager : MonoBehaviour
         gachaOverviewCanvas.gameObject.SetActive(true);
     }
 
-    void OnSkipButtonClick()
+    private void OnSkipButtonClick()
     {
         skipClicked = true;
         StopAllCoroutines();
+        ResetAnimations();
         DisplayGachaOverview();
     }
 
-    void OnNextButtonClick()
+    private void OnNextButtonClick()
     {
         gachaOverviewCanvas.gameObject.SetActive(false);
     }
 
-    void OnPullAgainButtonClick()
+    private void OnPullAgainButtonClick()
     {
         StartCoroutine(gachaManager.SendGachaRequest(10));
+        StartCoroutine(SetInactiveAfterDelay());
+    }
+
+    private IEnumerator SetInactiveAfterDelay()
+    {
+        yield return new WaitForSeconds(0.5f);
         gachaOverviewCanvas.gameObject.SetActive(false);
     }
 
-    void ResetAnimations()
+    private void ResetAnimations()
     {
         Animation silhouetteImageAnimation = silhouetteImage.GetComponent<Animation>();
         silhouetteImageAnimation.Stop();
@@ -283,15 +335,28 @@ public class UIManager : MonoBehaviour
             0.0f
         );
 
+        RectTransform namecardMaskRectTransform = namecardMask.GetComponent<RectTransform>();
+        namecardMaskRectTransform.sizeDelta = new Vector2(
+            namecardMaskRectTransform.sizeDelta.x,
+            0.0f
+        );
+
         SetImageOpacity(silhouetteImage.GetComponent<Image>(), 0f);
         SetImageOpacity(backgroundTint.GetComponent<Image>(), 0f);
         SetImageOpacity(movingTriangles.GetComponent<RawImage>(), 0f);
+
+        foreach (Transform child in stars.transform)
+        {
+            Image childImage = child.GetComponent<Image>();
+            SetImageOpacity(childImage, 0f);
+        }
     }
 
     private bool CheckForSkipOrClick(Character[] characters, int index)
     {
         if (skipClicked)
         {
+            threeStarSplash.gameObject.SetActive(false);
             return true;
         }
         if (Input.GetMouseButtonDown(0))
@@ -309,6 +374,11 @@ public class UIManager : MonoBehaviour
 
             if (EventSystem.current.currentSelectedGameObject != skipButton.gameObject)
             {
+                if (characters[index].rarity == "3*")
+                {
+                    threeStarSplash.gameObject.SetActive(false);
+                }
+
                 return true;
             }
         }

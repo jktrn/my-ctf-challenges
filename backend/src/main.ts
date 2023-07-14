@@ -7,7 +7,7 @@ const FLAG = 'SEKAI{TEST}'
 
 const data = JSON.parse(fs.readFileSync('src/gacha.json', 'utf8'))
 const characters = data.characters
-const probabilities = [0, 0.9, 0.1, 0]
+const probabilities = [0, 0.5, 0.5, 0]
 
 const server = http.createServer((req, res) => {
     if (req.url === undefined) {
