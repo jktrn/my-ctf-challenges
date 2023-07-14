@@ -82,30 +82,13 @@ public class UIManager : MonoBehaviour
                 break;
             }
 
-            StartCoroutine(DisplayCharacter(characters[i]));
+            StartCoroutine(
+                characters[i].rarity == "3*"
+                    ? DisplayThreeStarCharacter(characters[i])
+                    : DisplayTwoStarCharacter(characters[i])
+            );
             yield return new WaitForEndOfFrame();
-            yield return new WaitUntil(() =>
-            {
-                if (skipClicked)
-                {
-                    return true;
-                }
-                if (Input.GetMouseButtonDown(0))
-                {
-                    if (isAnimating)
-                    {
-                        StopAllCoroutines();
-                        StartCoroutine(DisplayCharacterInstantly(characters[i]));
-                        return false;
-                    }
-
-                    if (EventSystem.current.currentSelectedGameObject != skipButton.gameObject)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            });
+            yield return new WaitUntil(() => CheckForSkipOrClick(characters, i));
 
             if (!skipClicked)
             {
@@ -116,24 +99,24 @@ public class UIManager : MonoBehaviour
         DisplayGachaOverview();
     }
 
-    IEnumerator DisplayCharacter(Character character)
+    IEnumerator DisplayTwoStarCharacter(Character character)
     {
+        ResetAnimations();
         UpdateCharacterText(character);
         UpdateSplashArtImage(character.splashArt);
         UpdateSilhouetteImage(character.splashArt);
-        ResetAnimations();
 
-        var silhouetteImageAnimation = silhouetteImage.GetComponent<Animation>();
-        var splashArtBackgroundAnimation = splashArtBackground.GetComponent<Animation>();
-        var backgroundTintAnimation = backgroundTint.GetComponent<Animation>();
-        var splashArtImageMaskAnimation = splashArtImageMask.GetComponent<Animation>();
-        var movingTrianglesAnimation = movingTriangles.GetComponent<Animation>();
+        Animation silhouetteImageAnimation = silhouetteImage.GetComponent<Animation>();
+        Animation splashArtBackgroundAnimation = splashArtBackground.GetComponent<Animation>();
+        Animation backgroundTintAnimation = backgroundTint.GetComponent<Animation>();
+        Animation splashArtImageMaskAnimation = splashArtImageMask.GetComponent<Animation>();
+        Animation movingTrianglesAnimation = movingTriangles.GetComponent<Animation>();
 
         isAnimating = true;
         silhouetteImageAnimation.Play();
         splashArtBackgroundAnimation.Play();
 
-        yield return new WaitForSeconds(silhouetteImageAnimation.clip.length);
+        yield return new WaitForSeconds(1f);
 
         movingTrianglesAnimation.Play();
         splashArtImageMaskAnimation.Play();
@@ -152,28 +135,32 @@ public class UIManager : MonoBehaviour
         isAnimating = false;
     }
 
-    IEnumerator DisplayCharacterInstantly(Character character)
+    IEnumerator DisplayTwoStarCharacterInstant(Character character)
     {
+        ResetAnimations();
         UpdateCharacterText(character);
         UpdateSplashArtImage(character.splashArt);
         UpdateSilhouetteImage(character.splashArt);
 
-        var splashArtBackgroundAnimation = splashArtBackground.GetComponent<Animation>();
-        RectTransform splashArtImageMaskRectTransform =
-            splashArtImageMask.GetComponent<RectTransform>();
-
-        SetImageOpacity(silhouetteImage.GetComponent<Image>(), 1f);
-        SetImageOpacity(backgroundTint.GetComponent<Image>(), 0.6f);
-        SetImageOpacity(movingTriangles.GetComponent<RawImage>(), 0.6f);
-
-        splashArtImageMaskRectTransform.sizeDelta = new Vector2(
-            splashArtImageMaskRectTransform.sizeDelta.x,
-            1207.6f
-        );
-
-        splashArtBackgroundAnimation["SplashArtBackground"].normalizedTime = 1f;
+        SkipAnimation(silhouetteImage.gameObject, "SilhouetteImage", 3f);
+        SkipAnimation(splashArtBackground.gameObject, "SplashArtBackground");
+        SkipAnimation(backgroundTint.gameObject, "BackgroundTint");
+        SkipAnimation(splashArtImageMask.gameObject, "SplashImage");
+        SkipAnimation(movingTriangles.gameObject, "MovingTriangles");
 
         isAnimating = false;
+        yield break;
+    }
+
+    IEnumerator DisplayThreeStarCharacter(Character character)
+    {
+        // TODO: Implement 3* animation
+        yield break;
+    }
+
+    IEnumerator DisplayThreeStarCharacterInstant(Character character)
+    {
+        // TODO: Implement 3* animation
         yield break;
     }
 
@@ -243,6 +230,14 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    void SkipAnimation(GameObject gameObject, string clipName, float startTime = float.MaxValue)
+    {
+        Animation animation = gameObject.GetComponent<Animation>();
+        animation.Play(clipName);
+        animation[clipName].time =
+            startTime == float.MaxValue ? animation[clipName].clip.length : startTime;
+    }
+
     void SetImageOpacity(MaskableGraphic image, float targetOpacity)
     {
         Color imageColor = image.color;
@@ -278,6 +273,9 @@ public class UIManager : MonoBehaviour
 
     void ResetAnimations()
     {
+        Animation silhouetteImageAnimation = silhouetteImage.GetComponent<Animation>();
+        silhouetteImageAnimation.Stop();
+
         RectTransform splashArtImageMaskRectTransform =
             splashArtImageMask.GetComponent<RectTransform>();
         splashArtImageMaskRectTransform.sizeDelta = new Vector2(
@@ -288,5 +286,32 @@ public class UIManager : MonoBehaviour
         SetImageOpacity(silhouetteImage.GetComponent<Image>(), 0f);
         SetImageOpacity(backgroundTint.GetComponent<Image>(), 0f);
         SetImageOpacity(movingTriangles.GetComponent<RawImage>(), 0f);
+    }
+
+    private bool CheckForSkipOrClick(Character[] characters, int index)
+    {
+        if (skipClicked)
+        {
+            return true;
+        }
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (isAnimating)
+            {
+                StopAllCoroutines();
+                StartCoroutine(
+                    characters[index].rarity == "3*"
+                        ? DisplayThreeStarCharacterInstant(characters[index])
+                        : DisplayTwoStarCharacterInstant(characters[index])
+                );
+                return false;
+            }
+
+            if (EventSystem.current.currentSelectedGameObject != skipButton.gameObject)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
