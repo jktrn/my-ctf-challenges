@@ -25,6 +25,7 @@ public class UIManager : MonoBehaviour
     public Image threeStarSplash;
     public Image silhouetteImage;
     public Image namecardMask;
+    public Image flagImage;
     public GameObject stars;
     public RawImage movingTriangles;
     public Button skipButton;
@@ -85,11 +86,19 @@ public class UIManager : MonoBehaviour
                 break;
             }
 
-            StartCoroutine(
-                characters[i].rarity == "3*"
-                    ? DisplayThreeStarCharacter(characters[i])
-                    : DisplayTwoStarCharacter(characters[i])
-            );
+            if (characters[i].rarity == "4*")
+            {
+                StartCoroutine(DisplayFourStarCharacter(characters[i]));
+            }
+            else if (characters[i].rarity == "3*")
+            {
+                StartCoroutine(DisplayThreeStarCharacter(characters[i]));
+            }
+            else
+            {
+                StartCoroutine(DisplayTwoStarCharacter(characters[i]));
+            }
+
             yield return new WaitForEndOfFrame();
             yield return new WaitUntil(() => CheckForSkipOrClick(characters, i));
 
@@ -147,7 +156,6 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator DisplayTwoStarCharacterInstant(Character character)
     {
-        ResetAnimations();
         UpdateCharacterText(character);
         UpdateSplashArtImage(character.splashArt, splashArtImage);
         UpdateSilhouetteImage(character.splashArt);
@@ -194,6 +202,64 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator DisplayThreeStarCharacterInstant(Character character)
     {
+        UpdateCharacterText(character);
+        UpdateSplashArtImage(character.splashArt, threeStarSplash);
+        threeStarSplash.gameObject.SetActive(true);
+
+        SkipAnimation(threeStarSplash.gameObject, "ThreeStarSplash");
+        SkipAnimation(stars, "ThreeStarRarity");
+        SkipAnimation(namecardMask.gameObject, "Namecard");
+
+        isAnimating = false;
+        yield break;
+    }
+
+    private IEnumerator DisplayFourStarCharacter(Character character)
+    {
+        ResetAnimations();
+        UpdateCharacterText(character);
+        UpdateSplashArtImage(character.splashArt, threeStarSplash);
+        threeStarSplash.gameObject.SetActive(true);
+
+        Animation threeStarSplashAnimation = threeStarSplash.GetComponent<Animation>();
+        Animation starsAnimation = stars.GetComponent<Animation>();
+        Animation namecardMaskAnimation = namecardMask.GetComponent<Animation>();
+
+        string flag = gachaManager.lastGachaResponse.flag;
+
+        if (flag != null)
+        {
+            byte[] imageBytes = System.Convert.FromBase64String(flag);
+            Texture2D flagTexture = new Texture2D(2, 2);
+            flagTexture.LoadImage(imageBytes);
+
+            Rect rect = new Rect(0, 0, flagTexture.width, flagTexture.height);
+            Vector2 pivot = new Vector2(0.5f, 0.5f);
+            Sprite flagSprite = Sprite.Create(flagTexture, rect, pivot);
+
+            flagImage.sprite = flagSprite;
+        }
+
+        isAnimating = true;
+        threeStarSplashAnimation.Play();
+
+        yield return new WaitForSeconds(1f);
+
+        starsAnimation.Play("ThreeStarRarity");
+
+        yield return new WaitForSeconds(1f);
+
+        flagImage.gameObject.SetActive(true);
+        namecardMaskAnimation.Play();
+
+        yield return new WaitUntil(() => !threeStarSplashAnimation.isPlaying);
+
+        isAnimating = false;
+        yield break;
+    }
+
+    private IEnumerator DisplayFourStarCharacterInstant(Character character)
+    {
         ResetAnimations();
         UpdateCharacterText(character);
         UpdateSplashArtImage(character.splashArt, threeStarSplash);
@@ -202,7 +268,7 @@ public class UIManager : MonoBehaviour
         SkipAnimation(threeStarSplash.gameObject, "ThreeStarSplash");
         SkipAnimation(stars, "ThreeStarRarity");
         SkipAnimation(namecardMask.gameObject, "Namecard");
-        
+
         isAnimating = false;
         yield break;
     }
@@ -326,7 +392,9 @@ public class UIManager : MonoBehaviour
     private void ResetAnimations()
     {
         Animation silhouetteImageAnimation = silhouetteImage.GetComponent<Animation>();
+        Animation starsAnimation = stars.GetComponent<Animation>();
         silhouetteImageAnimation.Stop();
+        starsAnimation.Stop();
 
         RectTransform splashArtImageMaskRectTransform =
             splashArtImageMask.GetComponent<RectTransform>();
@@ -350,6 +418,8 @@ public class UIManager : MonoBehaviour
             Image childImage = child.GetComponent<Image>();
             SetImageOpacity(childImage, 0f);
         }
+
+        flagImage.gameObject.SetActive(false);
     }
 
     private bool CheckForSkipOrClick(Character[] characters, int index)
@@ -364,17 +434,24 @@ public class UIManager : MonoBehaviour
             if (isAnimating)
             {
                 StopAllCoroutines();
-                StartCoroutine(
-                    characters[index].rarity == "3*"
-                        ? DisplayThreeStarCharacterInstant(characters[index])
-                        : DisplayTwoStarCharacterInstant(characters[index])
-                );
+                if (characters[index].rarity == "4*")
+                {
+                    StartCoroutine(DisplayFourStarCharacterInstant(characters[index]));
+                }
+                else if (characters[index].rarity == "3*")
+                {
+                    StartCoroutine(DisplayThreeStarCharacterInstant(characters[index]));
+                }
+                else
+                {
+                    StartCoroutine(DisplayTwoStarCharacterInstant(characters[index]));
+                }
                 return false;
             }
 
             if (EventSystem.current.currentSelectedGameObject != skipButton.gameObject)
             {
-                if (characters[index].rarity == "3*")
+                if (characters[index].rarity == "3*" || characters[index].rarity == "4*")
                 {
                     threeStarSplash.gameObject.SetActive(false);
                 }

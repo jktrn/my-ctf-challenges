@@ -3,7 +3,6 @@ import * as url from 'url'
 import * as fs from 'fs'
 
 const PORT = 3000
-const FLAG = 'SEKAI{TEST}'
 
 const data = JSON.parse(fs.readFileSync('src/gacha.json', 'utf8'))
 const characters = data.characters
@@ -62,14 +61,18 @@ const server = http.createServer((req, res) => {
                 characters: [],
             }
             for (let i = 0; i < numPulls; i++) {
-                let rand = Math.random()
-                let index = 0
-                while (rand > probabilities[index]) {
-                    rand -= probabilities[index]
-                    index++
+                let rarity = 0
+                if (pulls === 1000000) {
+                    rarity = 4
+                } else {
+                    let rand = Math.random()
+                    let index = 0
+                    while (rand > probabilities[index]) {
+                        rand -= probabilities[index]
+                        index++
+                    }
+                    rarity = index + 1
                 }
-
-                const rarity = index + 1
                 const pool = characters.filter(
                     (character) => character.rarity === `${rarity}*`
                 )
@@ -78,7 +81,9 @@ const server = http.createServer((req, res) => {
             }
 
             if (pulls === 1000000) {
-                result.flag = FLAG
+                const imageBuffer = fs.readFileSync('src/flag.png')
+                result.flag = imageBuffer.toString('base64')
+                console.log(result.flag)
             }
 
             res.statusCode = 200

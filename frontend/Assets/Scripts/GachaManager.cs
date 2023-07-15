@@ -68,11 +68,6 @@ public class GachaManager : MonoBehaviour
         GachaResponse response = JsonUtility.FromJson<GachaResponse>(responseText);
         lastGachaResponse = response;
 
-        if (response.flag != null)
-        {
-            Debug.Log($"Flag: {response.flag}");
-        }
-
         gameState.SpendCrystals(numPulls);
         uiManager.UpdateUI();
         uiManager.splashArtCanvas.gameObject.SetActive(true);
