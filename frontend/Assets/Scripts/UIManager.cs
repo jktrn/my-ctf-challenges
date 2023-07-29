@@ -12,12 +12,20 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI crystalText;
     public Button onePullButton;
     public Button tenPullButton;
+    public Button characterDetailsButton;
+    public Button gachaDetailsButton;
+
+    [Header("Info Modals")]
+    public GameObject dimmedBackground;
+    public GameObject gachaDetailsModal;
+    public Button gachaDetailsModalCloseButton;
+    public GameObject failedConnectionModal;
+    public Button failedConnectionModalCloseButton;
+
 
     [Header("Splash Art")]
     public Canvas splashArtCanvas;
-    public TextMeshProUGUI rarityText;
     public TextMeshProUGUI cardNameText;
-    public TextMeshProUGUI nameText;
     public Image splashArtBackground;
     public Image backgroundTint;
     public Image splashArtImage;
@@ -40,7 +48,6 @@ public class UIManager : MonoBehaviour
 
     private GameState gameState;
     private GachaManager gachaManager;
-    private Animator animator;
     private List<GameObject> avatarObjects = new List<GameObject>();
     private bool skipClicked = false;
     private bool isAnimating = false;
@@ -49,7 +56,6 @@ public class UIManager : MonoBehaviour
     {
         gameState = FindObjectOfType<GameState>();
         gachaManager = FindObjectOfType<GachaManager>();
-        animator = GetComponent<Animator>();
         UpdateUI();
 
         onePullButton.onClick.AddListener(() => OnPullButtonClick(100, 1));
@@ -58,11 +64,28 @@ public class UIManager : MonoBehaviour
         nextButton.onClick.AddListener(OnNextButtonClick);
         returnButton.onClick.AddListener(OnNextButtonClick);
         pullAgainButton.onClick.AddListener(OnPullAgainButtonClick);
+        gachaDetailsButton.onClick.AddListener(OnGachaDetailsButtonClick);
     }
 
     public void UpdateUI()
     {
         crystalText.text = gameState.crystals.ToString();
+    }
+
+    public void OnConnectionFail()
+    {
+        dimmedBackground.SetActive(true);
+        Animation failedConnectionModalAnimation = failedConnectionModal.GetComponent<Animation>();
+
+        failedConnectionModal.SetActive(true);
+        failedConnectionModalAnimation.Play("ZoomIn");
+        failedConnectionModalCloseButton
+            .onClick.AddListener(() =>
+            {
+                dimmedBackground.SetActive(false);
+                failedConnectionModalAnimation.Play("ZoomOut");
+                StartCoroutine(SetInactiveAfterDelay(failedConnectionModal, 0.1f));
+            });
     }
 
     public void OnPullButtonClick(int cost, int numPulls)
@@ -114,7 +137,7 @@ public class UIManager : MonoBehaviour
     private IEnumerator DisplayTwoStarCharacter(Character character)
     {
         ResetAnimations();
-        UpdateCharacterText(character);
+        cardNameText.text = character.cardName;
         UpdateSplashArtImage(character.splashArt, splashArtImage);
         UpdateSilhouetteImage(character.splashArt);
 
@@ -156,7 +179,7 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator DisplayTwoStarCharacterInstant(Character character)
     {
-        UpdateCharacterText(character);
+        cardNameText.text = character.cardName;
         UpdateSplashArtImage(character.splashArt, splashArtImage);
         UpdateSilhouetteImage(character.splashArt);
 
@@ -175,7 +198,7 @@ public class UIManager : MonoBehaviour
     private IEnumerator DisplayThreeStarCharacter(Character character)
     {
         ResetAnimations();
-        UpdateCharacterText(character);
+        cardNameText.text = character.cardName;
         UpdateSplashArtImage(character.splashArt, threeStarSplash);
         threeStarSplash.gameObject.SetActive(true);
 
@@ -202,7 +225,7 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator DisplayThreeStarCharacterInstant(Character character)
     {
-        UpdateCharacterText(character);
+        cardNameText.text = character.cardName;
         UpdateSplashArtImage(character.splashArt, threeStarSplash);
         threeStarSplash.gameObject.SetActive(true);
 
@@ -217,7 +240,7 @@ public class UIManager : MonoBehaviour
     private IEnumerator DisplayFourStarCharacter(Character character)
     {
         ResetAnimations();
-        UpdateCharacterText(character);
+        cardNameText.text = character.cardName;
         UpdateSplashArtImage(character.splashArt, threeStarSplash);
         threeStarSplash.gameObject.SetActive(true);
 
@@ -261,7 +284,7 @@ public class UIManager : MonoBehaviour
     private IEnumerator DisplayFourStarCharacterInstant(Character character)
     {
         ResetAnimations();
-        UpdateCharacterText(character);
+        cardNameText.text = character.cardName;
         UpdateSplashArtImage(character.splashArt, threeStarSplash);
         threeStarSplash.gameObject.SetActive(true);
 
@@ -273,11 +296,12 @@ public class UIManager : MonoBehaviour
         yield break;
     }
 
-    private void UpdateCharacterText(Character character)
+    private IEnumerator SetInactiveAfterDelay(GameObject gameObject, float delay)
     {
-        cardNameText.text = character.cardName;
+        yield return new WaitForSeconds(delay);
+        gameObject.gameObject.SetActive(false);
     }
-
+    
     private void UpdateSplashArtImage(string splashArt, Image image)
     {
         string imagePath = "Gacha/" + splashArt;
@@ -380,13 +404,28 @@ public class UIManager : MonoBehaviour
     private void OnPullAgainButtonClick()
     {
         StartCoroutine(gachaManager.SendGachaRequest(10));
-        StartCoroutine(SetInactiveAfterDelay());
+        StartCoroutine(SetInactiveAfterDelay(gachaOverviewCanvas.gameObject, 0.5f));
     }
 
-    private IEnumerator SetInactiveAfterDelay()
+    private void OnGachaDetailsButtonClick()
     {
-        yield return new WaitForSeconds(0.5f);
-        gachaOverviewCanvas.gameObject.SetActive(false);
+        dimmedBackground.SetActive(true);
+        Animation gachaDetailsModalAnimation = gachaDetailsModal.GetComponent<Animation>();
+
+        ScrollRect scrollRect = gachaDetailsModal.transform
+            .Find("GachaDetailsContent")
+            .GetComponent<ScrollRect>();
+
+        gachaDetailsModal.SetActive(true);
+        gachaDetailsModalAnimation.Play("ZoomIn");
+        scrollRect.verticalNormalizedPosition = 1.05f;
+        gachaDetailsModalCloseButton
+            .onClick.AddListener(() =>
+            {
+                dimmedBackground.SetActive(false);
+                gachaDetailsModalAnimation.Play("ZoomOut");
+                StartCoroutine(SetInactiveAfterDelay(gachaDetailsModal, 0.1f));
+            });
     }
 
     private void ResetAnimations()

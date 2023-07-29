@@ -45,7 +45,7 @@ public class GachaManager : MonoBehaviour
             }
             else
             {
-                Debug.Log($"Error: {request.error}");
+                uiManager.OnConnectionFail();
             }
         }
     }

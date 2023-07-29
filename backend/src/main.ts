@@ -62,7 +62,7 @@ const server = http.createServer((req, res) => {
             }
             for (let i = 0; i < numPulls; i++) {
                 let rarity = 0
-                if (pulls === 1000000) {
+                if (pulls >= 1000000) {
                     rarity = 4
                 } else {
                     let rand = Math.random()
@@ -80,10 +80,9 @@ const server = http.createServer((req, res) => {
                 result.characters.push(pool[characterIndex])
             }
 
-            if (pulls === 1000000) {
+            if (pulls >= 1000000) {
                 const imageBuffer = fs.readFileSync('src/flag.png')
                 result.flag = imageBuffer.toString('base64')
-                console.log(result.flag)
             }
 
             res.statusCode = 200
