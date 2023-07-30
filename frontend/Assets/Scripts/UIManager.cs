@@ -19,9 +19,16 @@ public class UIManager : MonoBehaviour
     public GameObject dimmedBackground;
     public GameObject gachaDetailsModal;
     public Button gachaDetailsModalCloseButton;
+    public GameObject characterDetailsModal;
+    public Button characterDetailsModalCloseButton;
     public GameObject failedConnectionModal;
     public Button failedConnectionModalCloseButton;
-
+    public GameObject pullConfirmationModal;
+    public TextMeshProUGUI pullConfirmationText;
+    public TextMeshProUGUI requiredCrystalsText;
+    public TextMeshProUGUI currentCrystalsText;
+    public Button pullConfirmationContinueButton;
+    public Button pullConfirmationCloseButton;
 
     [Header("Splash Art")]
     public Canvas splashArtCanvas;
@@ -65,6 +72,10 @@ public class UIManager : MonoBehaviour
         returnButton.onClick.AddListener(OnNextButtonClick);
         pullAgainButton.onClick.AddListener(OnPullAgainButtonClick);
         gachaDetailsButton.onClick.AddListener(OnGachaDetailsButtonClick);
+        characterDetailsButton.onClick.AddListener(() =>
+        {
+            GenericModalHandler(characterDetailsModal, characterDetailsModalCloseButton);
+        });
     }
 
     public void UpdateUI()
@@ -72,31 +83,59 @@ public class UIManager : MonoBehaviour
         crystalText.text = gameState.crystals.ToString();
     }
 
-    public void OnConnectionFail()
-    {
-        dimmedBackground.SetActive(true);
-        Animation failedConnectionModalAnimation = failedConnectionModal.GetComponent<Animation>();
-
-        failedConnectionModal.SetActive(true);
-        failedConnectionModalAnimation.Play("ZoomIn");
-        failedConnectionModalCloseButton
-            .onClick.AddListener(() =>
-            {
-                dimmedBackground.SetActive(false);
-                failedConnectionModalAnimation.Play("ZoomOut");
-                StartCoroutine(SetInactiveAfterDelay(failedConnectionModal, 0.1f));
-            });
-    }
-
     public void OnPullButtonClick(int cost, int numPulls)
     {
+        dimmedBackground.SetActive(true);
+        Animation pullConfirmationModalAnimation = pullConfirmationModal.GetComponent<Animation>();
+
+        pullConfirmationText.text =
+            $"クリスタル<color=#FF679A>{cost.ToString()}個</color>を消費して<color=#FF679A>{numPulls.ToString()}回</color>\n「[小豆沢こはね] HAPPY BIRTHDAY2023ガチャ」を引\nきます。\nよろしいですか?";
+
+        requiredCrystalsText.text = cost.ToString();
+        pullConfirmationContinueButton.interactable = true;
+
         if (gameState.crystals < cost)
         {
-            Debug.Log("Not enough crystals!");
-            return;
+            pullConfirmationContinueButton.interactable = false;
+            currentCrystalsText.text = $"<color=#FF679A>{gameState.crystals.ToString()}</color>";
         }
 
-        StartCoroutine(gachaManager.SendGachaRequest(numPulls));
+        currentCrystalsText.text = gameState.crystals.ToString();
+        pullConfirmationModal.SetActive(true);
+        pullConfirmationModalAnimation.Play("ZoomIn");
+
+        pullConfirmationContinueButton.onClick.RemoveAllListeners();
+        pullConfirmationCloseButton.onClick.RemoveAllListeners();
+
+        pullConfirmationContinueButton.onClick.AddListener(() =>
+        {
+            dimmedBackground.SetActive(false);
+            pullConfirmationModal.SetActive(false);
+            StartCoroutine(gachaManager.SendGachaRequest(numPulls));
+        });
+
+        pullConfirmationCloseButton.onClick.AddListener(() =>
+        {
+            dimmedBackground.SetActive(false);
+            pullConfirmationModalAnimation.Play("ZoomOut");
+            StartCoroutine(SetInactiveAfterDelay(pullConfirmationModal, 0.1f));
+        });
+    }
+
+    public void GenericModalHandler(GameObject modal, Button closeButton)
+    {
+        dimmedBackground.SetActive(true);
+        Animation modalAnimation = modal.GetComponent<Animation>();
+
+        modal.SetActive(true);
+        modalAnimation.Play("ZoomIn");
+        closeButton.onClick.RemoveAllListeners();
+        closeButton.onClick.AddListener(() =>
+        {
+            dimmedBackground.SetActive(false);
+            modalAnimation.Play("ZoomOut");
+            StartCoroutine(SetInactiveAfterDelay(modal, 0.1f));
+        });
     }
 
     public IEnumerator DisplaySplashArt(Character[] characters)
@@ -158,6 +197,7 @@ public class UIManager : MonoBehaviour
         movingTrianglesAnimation.Play();
         splashArtImageMaskAnimation.Play();
         starsAnimation.Play("TwoStarRarity");
+        AudioController.Instance.PlaySFX("TwoStar");
 
         yield return new WaitForSeconds(0.5f);
 
@@ -212,9 +252,10 @@ public class UIManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         starsAnimation.Play("ThreeStarRarity");
+        AudioController.Instance.PlaySFX("ThreeStar");
 
         yield return new WaitForSeconds(1f);
-
+        
         namecardMaskAnimation.Play();
 
         yield return new WaitUntil(() => !threeStarSplashAnimation.isPlaying);
@@ -272,6 +313,7 @@ public class UIManager : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
+        AudioController.Instance.PlaySFX("ThreeStar");
         flagImage.gameObject.SetActive(true);
         namecardMaskAnimation.Play();
 
@@ -301,7 +343,7 @@ public class UIManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
         gameObject.gameObject.SetActive(false);
     }
-    
+
     private void UpdateSplashArtImage(string splashArt, Image image)
     {
         string imagePath = "Gacha/" + splashArt;
@@ -385,6 +427,7 @@ public class UIManager : MonoBehaviour
         splashArtCanvas.gameObject.SetActive(false);
         AudioController.Instance.FadeMusic("Gacha");
         DisplayAvatars(gachaManager.lastGachaResponse.characters);
+        AudioController.Instance.PlaySFX("Award");
         gachaOverviewCanvas.gameObject.SetActive(true);
     }
 
@@ -419,13 +462,13 @@ public class UIManager : MonoBehaviour
         gachaDetailsModal.SetActive(true);
         gachaDetailsModalAnimation.Play("ZoomIn");
         scrollRect.verticalNormalizedPosition = 1.05f;
-        gachaDetailsModalCloseButton
-            .onClick.AddListener(() =>
-            {
-                dimmedBackground.SetActive(false);
-                gachaDetailsModalAnimation.Play("ZoomOut");
-                StartCoroutine(SetInactiveAfterDelay(gachaDetailsModal, 0.1f));
-            });
+        gachaDetailsModalCloseButton.onClick.RemoveAllListeners();
+        gachaDetailsModalCloseButton.onClick.AddListener(() =>
+        {
+            dimmedBackground.SetActive(false);
+            gachaDetailsModalAnimation.Play("ZoomOut");
+            StartCoroutine(SetInactiveAfterDelay(gachaDetailsModal, 0.1f));
+        });
     }
 
     private void ResetAnimations()
@@ -473,6 +516,7 @@ public class UIManager : MonoBehaviour
             if (isAnimating)
             {
                 StopAllCoroutines();
+                AudioController.Instance.PlaySFX("Touch");
                 if (characters[index].rarity == "4*")
                 {
                     StartCoroutine(DisplayFourStarCharacterInstant(characters[index]));

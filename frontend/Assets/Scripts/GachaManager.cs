@@ -45,7 +45,10 @@ public class GachaManager : MonoBehaviour
             }
             else
             {
-                uiManager.OnConnectionFail();
+                uiManager.GenericModalHandler(
+                    uiManager.failedConnectionModal,
+                    uiManager.failedConnectionModalCloseButton
+                );
             }
         }
     }

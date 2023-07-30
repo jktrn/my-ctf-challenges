@@ -8,6 +8,7 @@ public class ShrinkButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     public Button yourButton;
     public float shrinkFactor = 0.9f;
     public float shrinkTime = 0.1f;
+    public string clickSoundEffect;
 
     private Vector3 originalScale;
 
@@ -19,13 +20,13 @@ public class ShrinkButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     public void OnPointerDown(PointerEventData eventData)
     {
         StopAllCoroutines();
-        AudioController.Instance.PlaySFX("Touch");
         StartCoroutine(Shrink());
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
         StopAllCoroutines();
+        AudioController.Instance.PlaySFX(clickSoundEffect);
         StartCoroutine(Grow());
     }
 

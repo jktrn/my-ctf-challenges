@@ -6,7 +6,7 @@ const PORT = 3000
 
 const data = JSON.parse(fs.readFileSync('src/gacha.json', 'utf8'))
 const characters = data.characters
-const probabilities = [0, 0.5, 0.5, 0]
+const probabilities = [0, 0.915, 0.085, 0]
 
 const server = http.createServer((req, res) => {
     if (req.url === undefined) {
