@@ -1,0 +1,38 @@
+# Stuff that's commented out I'll figure out later
+
+challenge:
+  name: Azusawa's Gacha World
+  category: reverse
+  type: http
+
+network:
+  internalport: 3000
+  externalport: 7001
+  nodeport: 30701
+
+# containers:
+#   - name: container-name-1
+#     image: gcr.io/sekaictf-2023/misc_example-nginx:latest
+#     resources:
+#       requests:
+#         cpu: 50m
+#         memory: 50Mi
+#       limits:
+#         cpu: 75m
+#         memory: 75Mi
+#     ports:
+#       - containerPort: 80
+
+#   - name: web
+#     image: gcr.io/sekaictf-2023/misc_example-web:latest
+#     env:
+#       FLAG: SEKAI{1337}
+#     resources:
+#       requests:
+#         cpu: 50m
+#         memory: 50Mi
+#       limits:
+#         cpu: 75m
+#         memory: 75Mi
+#     ports:
+#       - containerPort: 8080
