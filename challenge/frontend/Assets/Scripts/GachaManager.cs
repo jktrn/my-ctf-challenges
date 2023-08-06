@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using RequestClasses;
+using System;
 
 public class GachaManager : MonoBehaviour
 {
@@ -56,8 +57,12 @@ public class GachaManager : MonoBehaviour
     UnityWebRequest CreateGachaWebRequest(string json)
     {
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+        string requestUrl = "aHR0cDovLzE3Mi44Ni42NC44OTozMDAwL2dhY2hh";
 
-        UnityWebRequest request = new UnityWebRequest("http://localhost:3000/gacha", "POST");
+        UnityWebRequest request = new UnityWebRequest(
+            System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(requestUrl)),
+            "POST"
+        );
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
