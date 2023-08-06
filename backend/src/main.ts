@@ -8,6 +8,16 @@ const data = JSON.parse(fs.readFileSync('src/gacha.json', 'utf8'))
 const characters = data.characters
 const probabilities = [0, 0.915, 0.085, 0]
 
+interface Character {
+    name: string;
+    cardName: string;
+    rarity: string;
+    attribute: string;
+    splashArt: string;
+    avatar: string;
+    flag?: string;
+}
+
 const server = http.createServer((req, res) => {
     if (req.url === undefined) {
         res.statusCode = 400
@@ -57,13 +67,39 @@ const server = http.createServer((req, res) => {
                 return
             }
 
-            const result: { characters: any[]; flag?: string } = {
+            const result: { characters: Character[] } = {
                 characters: [],
             }
+            
+            let totalPulls = pulls;
+            
+            if (totalPulls >= 1000000) {
+                totalPulls -= 1000000;
+            }
+            
             for (let i = 0; i < numPulls; i++) {
                 let rarity = 0
-                if (pulls >= 1000000) {
+                
+                totalPulls += 1;
+                
+                if (totalPulls >= 1000000) {
                     rarity = 4
+                    totalPulls -= 1000000;
+                    
+                    const pool = characters.filter(
+                        (character) => character.rarity === `${rarity}*`
+                    )
+                    
+                    const characterIndex = Math.floor(Math.random() * pool.length)
+                    
+                    const imageBuffer = fs.readFileSync('src/flag.png')
+                    
+                    result.characters.push({
+                        ...pool[characterIndex],
+                        flag: imageBuffer.toString('base64'),
+                    })
+                    
+                    continue;
                 } else {
                     let rand = Math.random()
                     let index = 0
@@ -73,16 +109,14 @@ const server = http.createServer((req, res) => {
                     }
                     rarity = index + 1
                 }
+                
                 const pool = characters.filter(
                     (character) => character.rarity === `${rarity}*`
                 )
+                
                 const characterIndex = Math.floor(Math.random() * pool.length)
+                
                 result.characters.push(pool[characterIndex])
-            }
-
-            if (pulls >= 1000000) {
-                const imageBuffer = fs.readFileSync('src/flag.png')
-                result.flag = imageBuffer.toString('base64')
             }
 
             res.statusCode = 200
