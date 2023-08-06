@@ -4,7 +4,7 @@
 
 ### Description
 
-Date: 03/02/2023
+Date: 2023-03-02
 
 I am completely, utterly, unconditionally infatuated with Kohane Azusawa... it’s an unhealthy obsession. And today, her birthday banner just dropped.
 
