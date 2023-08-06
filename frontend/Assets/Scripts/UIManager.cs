@@ -14,6 +14,8 @@ public class UIManager : MonoBehaviour
     public Button tenPullButton;
     public Button characterDetailsButton;
     public Button gachaDetailsButton;
+    public Button addCrystalsButton;
+    public Button menuButton;
 
     [Header("Info Modals")]
     public GameObject dimmedBackground;
@@ -23,12 +25,21 @@ public class UIManager : MonoBehaviour
     public Button characterDetailsModalCloseButton;
     public GameObject failedConnectionModal;
     public Button failedConnectionModalCloseButton;
+    public GameObject tryHarderModal;
+    public Button tryHarderModalCloseButton;
     public GameObject pullConfirmationModal;
     public TextMeshProUGUI pullConfirmationText;
     public TextMeshProUGUI requiredCrystalsText;
     public TextMeshProUGUI currentCrystalsText;
     public Button pullConfirmationContinueButton;
     public Button pullConfirmationCloseButton;
+    public GameObject menuModal;
+    public Button menuModalCloseButton;
+    public Slider musicSlider;
+    public TextMeshProUGUI musicSliderValue;
+    public Slider sfxSlider;
+    public TextMeshProUGUI sfxSliderValue;
+    public Button exitGameButton;
 
     [Header("Splash Art")]
     public Canvas splashArtCanvas;
@@ -58,6 +69,10 @@ public class UIManager : MonoBehaviour
     private List<GameObject> avatarObjects = new List<GameObject>();
     private bool skipClicked = false;
     private bool isAnimating = false;
+    private float oldMusicVolume;
+    private float oldSFXVolume;
+    private float timeSinceLastSFX = 0f;
+    private float sfxCooldown = 0.05f;
 
     void Start()
     {
@@ -72,15 +87,68 @@ public class UIManager : MonoBehaviour
         returnButton.onClick.AddListener(OnNextButtonClick);
         pullAgainButton.onClick.AddListener(OnPullAgainButtonClick);
         gachaDetailsButton.onClick.AddListener(OnGachaDetailsButtonClick);
+        addCrystalsButton.onClick.AddListener(() =>
+        {
+            GenericModalHandler(tryHarderModal, tryHarderModalCloseButton);
+        });
         characterDetailsButton.onClick.AddListener(() =>
         {
             GenericModalHandler(characterDetailsModal, characterDetailsModalCloseButton);
+        });
+        menuButton.onClick.AddListener(() =>
+        {
+            GenericModalHandler(menuModal, menuModalCloseButton);
         });
     }
 
     public void UpdateUI()
     {
         crystalText.text = gameState.crystals.ToString();
+    }
+
+    public void MusicVolume()
+    {
+        if (Time.time - timeSinceLastSFX >= sfxCooldown)
+        {
+            if (musicSlider.value > oldMusicVolume)
+            {
+                AudioController.Instance.PlaySFX("Up");
+                timeSinceLastSFX = Time.time;
+            }
+            else if (musicSlider.value < oldMusicVolume)
+            {
+                AudioController.Instance.PlaySFX("Down");
+                timeSinceLastSFX = Time.time;
+            }
+        }
+        AudioController.Instance.MusicVolume(musicSlider.value);
+        musicSliderValue.text = musicSlider.value.ToString();
+        oldMusicVolume = musicSlider.value;
+    }
+
+    public void SFXVolume()
+    {
+        if (Time.time - timeSinceLastSFX >= sfxCooldown)
+        {
+            if (sfxSlider.value > oldSFXVolume)
+            {
+                AudioController.Instance.PlaySFX("Up");
+                timeSinceLastSFX = Time.time;
+            }
+            else if (sfxSlider.value < oldSFXVolume)
+            {
+                AudioController.Instance.PlaySFX("Down");
+                timeSinceLastSFX = Time.time;
+            }
+        }
+        AudioController.Instance.SFXVolume(sfxSlider.value);
+        sfxSliderValue.text = sfxSlider.value.ToString();
+        oldSFXVolume = sfxSlider.value;
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 
     public void OnPullButtonClick(int cost, int numPulls)
@@ -92,15 +160,17 @@ public class UIManager : MonoBehaviour
             $"クリスタル<color=#FF679A>{cost.ToString()}個</color>を消費して<color=#FF679A>{numPulls.ToString()}回</color>\n「[小豆沢こはね] HAPPY BIRTHDAY2023ガチャ」を引\nきます。\nよろしいですか?";
 
         requiredCrystalsText.text = cost.ToString();
+        currentCrystalsText.text = gameState.crystals.ToString();
+        pullConfirmationContinueButton.GetComponent<ShrinkButton>().enabled = true;
         pullConfirmationContinueButton.interactable = true;
 
         if (gameState.crystals < cost)
         {
+            pullConfirmationContinueButton.GetComponent<ShrinkButton>().enabled = false;
             pullConfirmationContinueButton.interactable = false;
             currentCrystalsText.text = $"<color=#FF679A>{gameState.crystals.ToString()}</color>";
         }
 
-        currentCrystalsText.text = gameState.crystals.ToString();
         pullConfirmationModal.SetActive(true);
         pullConfirmationModalAnimation.Play("ZoomIn");
 
@@ -210,29 +280,10 @@ public class UIManager : MonoBehaviour
         yield return new WaitUntil(
             () =>
                 !splashArtBackgroundAnimation.isPlaying
-                && !splashArtImageMaskAnimation.isPlaying
-                && !movingTrianglesAnimation.isPlaying
+                && !backgroundTintAnimation.isPlaying
         );
 
         isAnimating = false;
-    }
-
-    private IEnumerator DisplayTwoStarCharacterInstant(Character character)
-    {
-        cardNameText.text = character.cardName;
-        UpdateSplashArtImage(character.splashArt, splashArtImage);
-        UpdateSilhouetteImage(character.splashArt);
-
-        SkipAnimation(silhouetteImage.gameObject, "SilhouetteImage", 3f);
-        SkipAnimation(splashArtBackground.gameObject, "SplashArtBackground");
-        SkipAnimation(backgroundTint.gameObject, "BackgroundTint");
-        SkipAnimation(splashArtImageMask.gameObject, "SplashImage");
-        SkipAnimation(movingTriangles.gameObject, "MovingTriangles");
-        SkipAnimation(stars, "TwoStarRarity");
-        SkipAnimation(namecardMask.gameObject, "Namecard");
-
-        isAnimating = false;
-        yield break;
     }
 
     private IEnumerator DisplayThreeStarCharacter(Character character)
@@ -255,24 +306,10 @@ public class UIManager : MonoBehaviour
         AudioController.Instance.PlaySFX("ThreeStar");
 
         yield return new WaitForSeconds(1f);
-        
+
         namecardMaskAnimation.Play();
 
         yield return new WaitUntil(() => !threeStarSplashAnimation.isPlaying);
-
-        isAnimating = false;
-        yield break;
-    }
-
-    private IEnumerator DisplayThreeStarCharacterInstant(Character character)
-    {
-        cardNameText.text = character.cardName;
-        UpdateSplashArtImage(character.splashArt, threeStarSplash);
-        threeStarSplash.gameObject.SetActive(true);
-
-        SkipAnimation(threeStarSplash.gameObject, "ThreeStarSplash");
-        SkipAnimation(stars, "ThreeStarRarity");
-        SkipAnimation(namecardMask.gameObject, "Namecard");
 
         isAnimating = false;
         yield break;
@@ -289,7 +326,7 @@ public class UIManager : MonoBehaviour
         Animation starsAnimation = stars.GetComponent<Animation>();
         Animation namecardMaskAnimation = namecardMask.GetComponent<Animation>();
 
-        string flag = gachaManager.lastGachaResponse.flag;
+        string flag = character.flag;
 
         if (flag != null)
         {
@@ -309,30 +346,13 @@ public class UIManager : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        starsAnimation.Play("ThreeStarRarity");
-
-        yield return new WaitForSeconds(1f);
-
-        AudioController.Instance.PlaySFX("ThreeStar");
+        AudioController.Instance.PlaySFX("FourStar");
+        starsAnimation.Play("FourStarRarity");
+        
         flagImage.gameObject.SetActive(true);
         namecardMaskAnimation.Play();
 
         yield return new WaitUntil(() => !threeStarSplashAnimation.isPlaying);
-
-        isAnimating = false;
-        yield break;
-    }
-
-    private IEnumerator DisplayFourStarCharacterInstant(Character character)
-    {
-        ResetAnimations();
-        cardNameText.text = character.cardName;
-        UpdateSplashArtImage(character.splashArt, threeStarSplash);
-        threeStarSplash.gameObject.SetActive(true);
-
-        SkipAnimation(threeStarSplash.gameObject, "ThreeStarSplash");
-        SkipAnimation(stars, "ThreeStarRarity");
-        SkipAnimation(namecardMask.gameObject, "Namecard");
 
         isAnimating = false;
         yield break;
@@ -513,26 +533,10 @@ public class UIManager : MonoBehaviour
         }
         if (Input.GetMouseButtonDown(0))
         {
-            if (isAnimating)
-            {
-                StopAllCoroutines();
-                AudioController.Instance.PlaySFX("Touch");
-                if (characters[index].rarity == "4*")
-                {
-                    StartCoroutine(DisplayFourStarCharacterInstant(characters[index]));
-                }
-                else if (characters[index].rarity == "3*")
-                {
-                    StartCoroutine(DisplayThreeStarCharacterInstant(characters[index]));
-                }
-                else
-                {
-                    StartCoroutine(DisplayTwoStarCharacterInstant(characters[index]));
-                }
-                return false;
-            }
-
-            if (EventSystem.current.currentSelectedGameObject != skipButton.gameObject)
+            if (
+                !isAnimating
+                && EventSystem.current.currentSelectedGameObject != skipButton.gameObject
+            )
             {
                 if (characters[index].rarity == "3*" || characters[index].rarity == "4*")
                 {

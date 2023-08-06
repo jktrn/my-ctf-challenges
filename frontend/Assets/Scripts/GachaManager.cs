@@ -19,7 +19,6 @@ public class GachaManager : MonoBehaviour
     {
         if (gameState.crystals < cost)
         {
-            Debug.Log("Not enough crystals!");
             return;
         }
 
@@ -49,6 +48,7 @@ public class GachaManager : MonoBehaviour
                     uiManager.failedConnectionModal,
                     uiManager.failedConnectionModalCloseButton
                 );
+                AudioController.Instance.PlaySFX("Open");
             }
         }
     }

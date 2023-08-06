@@ -6,6 +6,7 @@ using System;
 public class AudioController : MonoBehaviour
 {
     public static AudioController Instance;
+    private UIManager uiManager;
     public Sound[] musicSounds,
         sfxSounds;
     public AudioSource musicSource,
@@ -87,16 +88,19 @@ public class AudioController : MonoBehaviour
         float startVolume2 = newMusicSource.volume;
         float currentTime = 0.0f;
 
+        uiManager = FindObjectOfType<UIManager>();
+        float endVolume = uiManager.musicSlider.value / 100.0f;
+
         while (currentTime < fadeTime)
         {
             currentTime += Time.deltaTime;
             musicSource.volume = Mathf.Lerp(startVolume1, 0.0f, currentTime / fadeTime);
-            newMusicSource.volume = Mathf.Lerp(startVolume2, 0.5f, currentTime / fadeTime);
+            newMusicSource.volume = Mathf.Lerp(startVolume2, endVolume, currentTime / fadeTime);
             yield return null;
         }
 
         musicSource.volume = 0.0f;
-        newMusicSource.volume = 0.5f;
+        newMusicSource.volume = endVolume;
 
         musicSource.Stop();
         Destroy(musicSource);
@@ -115,5 +119,15 @@ public class AudioController : MonoBehaviour
         }
 
         sfxSource.PlayOneShot(sound.clip);
+    }
+
+    public void MusicVolume(float volume)
+    {
+        musicSource.volume = volume / 100.0f;
+    }
+
+    public void SFXVolume(float volume)
+    {
+        sfxSource.volume = volume / 100.0f;
     }
 }

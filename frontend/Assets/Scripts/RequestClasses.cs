@@ -19,7 +19,6 @@ namespace RequestClasses
     public class GachaResponse
     {
         public Character[] characters;
-        public string flag;
     }
 
     [System.Serializable]
@@ -31,5 +30,6 @@ namespace RequestClasses
         public string attribute;
         public string splashArt;
         public string avatar;
+        public string flag;
     }
 }
