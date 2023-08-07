@@ -444,6 +444,16 @@ public class UIManager : MonoBehaviour
 
     private void DisplayGachaOverview()
     {
+        if (gameState.crystals < 1000)
+        {
+            pullAgainButton.GetComponent<ShrinkButton>().enabled = false;
+            pullAgainButton.interactable = false;
+        }
+        else
+        {
+            pullAgainButton.GetComponent<ShrinkButton>().enabled = true;
+            pullAgainButton.interactable = true;
+        }
         splashArtCanvas.gameObject.SetActive(false);
         AudioController.Instance.FadeMusic("Gacha");
         DisplayAvatars(gachaManager.lastGachaResponse.characters);
