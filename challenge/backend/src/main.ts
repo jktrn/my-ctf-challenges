@@ -71,11 +71,7 @@ const server = http.createServer((req, res) => {
                 characters: [],
             }
             
-            let totalPulls = pulls;
-            
-            if (totalPulls >= 1000000) {
-                totalPulls -= 1000000;
-            }
+            let totalPulls = pulls % 1000000;
             
             for (let i = 0; i < numPulls; i++) {
                 let rarity = 0
