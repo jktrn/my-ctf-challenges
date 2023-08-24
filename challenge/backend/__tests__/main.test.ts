@@ -1,11 +1,6 @@
 import server from '../src/main.js'
 import * as http from 'http'
-
-interface GachaResponse {
-    characters: string[]
-    flag?: string
-    error?: string
-}
+import { GachaResponse } from '../src/interfaces.js'
 
 describe('Gacha endpoint', () => {
     let req: http.ClientRequest
@@ -65,9 +60,15 @@ describe('Gacha endpoint', () => {
     })
 
     it('should show the flag if the user has 1,000,000 pulls', async () => {
-        const { res } = await testGachaEndpoint(1000, 1000000, 10)
+        const { res, data } = await testGachaEndpoint(1000, 999999, 1)
         expect(res.statusCode).toBe(200)
-        // expect(data.flag).toBeDefined()
+        expect(data.characters[0].flag).toBeDefined()
+    })
+
+    it('should return an error if numPulls is not either 1 or 10', async () => {
+        const { res, data } = await testGachaEndpoint(1100, 0, 11)
+        expect(res.statusCode).toBe(400)
+        expect(data.error).toBe('ERROR: numPulls can only be 1 or 10!')
     })
 
     it('should return an error if the user does not have enough gems for ten pulls', async () => {

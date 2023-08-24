@@ -1,6 +1,7 @@
 import * as http from 'http'
 import * as url from 'url'
 import * as fs from 'fs'
+import { GachaResponse } from './interfaces.js'
 
 const PORT = 3000
 
@@ -8,15 +9,6 @@ const data = JSON.parse(fs.readFileSync('src/gacha.json', 'utf8'))
 const characters = data.characters
 const probabilities = [0, 0.915, 0.085, 0]
 
-interface Character {
-    name: string;
-    cardName: string;
-    rarity: string;
-    attribute: string;
-    splashArt: string;
-    avatar: string;
-    flag?: string;
-}
 
 const server = http.createServer((req, res) => {
     if (req.url === undefined) {
@@ -67,35 +59,48 @@ const server = http.createServer((req, res) => {
                 return
             }
 
-            const result: { characters: Character[] } = {
+            if (numPulls !== 1 && numPulls !== 10) {
+                res.statusCode = 400
+                res.setHeader('Content-Type', 'application/json')
+                res.end(
+                    JSON.stringify({
+                        error: 'ERROR: numPulls can only be 1 or 10!',
+                    })
+                )
+                return
+            }
+
+            const result: GachaResponse = {
                 characters: [],
             }
-            
-            let totalPulls = pulls % 1000000;
-            
+
+            let totalPulls = pulls % 1000000
+
             for (let i = 0; i < numPulls; i++) {
                 let rarity = 0
-                
-                totalPulls += 1;
-                
+
+                totalPulls += 1
+
                 if (totalPulls >= 1000000) {
                     rarity = 4
-                    totalPulls -= 1000000;
-                    
+                    totalPulls -= 1000000
+
                     const pool = characters.filter(
                         (character) => character.rarity === `${rarity}*`
                     )
-                    
-                    const characterIndex = Math.floor(Math.random() * pool.length)
-                    
+
+                    const characterIndex = Math.floor(
+                        Math.random() * pool.length
+                    )
+
                     const imageBuffer = fs.readFileSync('src/flag.png')
-                    
+
                     result.characters.push({
                         ...pool[characterIndex],
                         flag: imageBuffer.toString('base64'),
                     })
-                    
-                    continue;
+
+                    continue
                 } else {
                     let rand = Math.random()
                     let index = 0
@@ -105,13 +110,13 @@ const server = http.createServer((req, res) => {
                     }
                     rarity = index + 1
                 }
-                
+
                 const pool = characters.filter(
                     (character) => character.rarity === `${rarity}*`
                 )
-                
+
                 const characterIndex = Math.floor(Math.random() * pool.length)
-                
+
                 result.characters.push(pool[characterIndex])
             }
 
