@@ -10,7 +10,7 @@
 
 > <https://azusawa.world/#/2023/03/02>
 >
-> ❖ Note
+> ❖ **Note**  
 > The website only contains the challenge description, and is not needed to solve the challenge.
 
 ### Description #2
