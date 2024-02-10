@@ -27,8 +27,16 @@
 > But alas, it's never enough. The odds are miniscule, the rates are rigged, the gacha system is a predatory sham.<br>
 > It feels like I've pulled a million times and I still haven't gotten her! Do the gacha gods not pity me?!<br><br>
 >
-> <img alt="In-game screenshot of gacha banner" src="https://azusawa.world/img/sekaictf2023_bd2023.webp">
+> <img alt="In-game screenshot of gacha banner" src="https://enscribe.dev/static/images/sekaictf-2023/initial-launch.png">
 
 ### Challenge Files
 
 [dist.zip](dist)
+
+---
+
+### Writeup
+
+[SekaiCTF 2023: A Hackable Unity Implementation of Project Sekai’s Gacha System](https://enscribe.dev/blog/sekaictf-2023/azusawas-gacha-world)
+
+![Banner](https://enscribe.dev/static/images/sekaictf-2023/banner.png)
