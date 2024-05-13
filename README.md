@@ -1,10 +1,6 @@
-<div align="center">
-
 ## enscribe's CTF Challenges
 
 This is a comprehensive repository containing every single CTF challenge I've authored since 2022. Most (if not all) of my challenges are beginner-friendly reverse-engineering/game-hacking challenges. I hope you enjoy them, and happy hacking!
-
-</div>
 
 ---
 
