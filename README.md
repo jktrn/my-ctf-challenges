@@ -10,9 +10,10 @@ This is a comprehensive repository containing every single CTF challenge I've au
 
 ### Challenge Table
 
-| CTF Name                | Challenge Name                                              | Category | Difficulty | Points | Solves | First Blood     | Time to Blood |
-|-------------------------|-------------------------------------------------------------|----------|------------|--------|--------|-----------------|---------------|
-| [San Diego CTF 2024](sdctf-2024/)     | [food-without-salt](sdctf-2024/food-without-salt/)           | Reverse  | Medium   | 136    | 32      | 0rd3rs          | 1 hour             |
-| [osu!gaming CTF 2024](osu-gaming-ctf-2024/)     | [ecs!catch](osu-gaming-ctf-2024/ecs-catch/)                   | Reverse  | -          | 140    | 73     | .;,;.           | 50 minutes    |
-| [SekaiCTF 2023](sekaictf-2023/)          | [Azusawa's Gacha World](sekaictf-2023/azusawas-gacha-world/)  | Reverse  | Easy (1)   | 100    | 250    | ascii\_overflow | 6 minutes     |
-| [SekaiCTF 2022](sekaictf-2022/)          | [Perfect Match X-treme](sekaictf-2022/perfect-match-xtreme/)  | Reverse  | Easy (1)   | 100    | -      | NYUSEC          | -             |
+| CTF Name                                    | Challenge Name                                               | Category | Difficulty | Points | Solves |
+|---------------------------------------------|--------------------------------------------------------------|----------|------------|--------|--------|
+| [San Diego CTF 2024](sdctf-2024/)           | [food-without-salt](sdctf-2024/food-without-salt/)           | Reverse  | Medium     | 136    | 32     |
+| [osu!gaming CTF 2024](osu-gaming-ctf-2024/) | [ecs!catch](osu-gaming-ctf-2024/ecs-catch/)                  | Reverse  | -          | 140    | 73     |
+| [SekaiCTF 2023](sekaictf-2023/)             | [Azusawa's Gacha World](sekaictf-2023/azusawas-gacha-world/) | Reverse  | Easy (1)   | 100    | 250    |
+| [SekaiCTF 2022](sekaictf-2022/)             | [Perfect Match X-treme](sekaictf-2022/perfect-match-xtreme/) | Reverse  | Easy (1)   | 100    | -      |
+
